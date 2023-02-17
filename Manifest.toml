@@ -1,0 +1,20 @@
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.8.5"
+manifest_format = "2.0"
+project_hash = "55144214a16cc2015dea8d6b4d1c3f8968d70fbc"
+
+[[deps.GZip]]
+deps = ["Libdl"]
+git-tree-sha1 = "039be665faf0b8ae36e089cd694233f5dee3f7d6"
+uuid = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
+version = "0.5.1"
+
+[[deps.Libdl]]
+uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[[deps.NBT]]
+deps = ["GZip"]
+git-tree-sha1 = "879fb34b302a13ec90ca027e73037f023d59e927"
+uuid = "b6fc1ac1-9d30-4df3-aa0b-dd666eb91533"
+version = "0.1.0"
