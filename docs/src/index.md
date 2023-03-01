@@ -4,7 +4,7 @@ CurrentModule = Litematica
 
 # Litematica
 
-Documentation for [Litematica](https://github.com/lntricate2/Litematica.jl).
+Documentation for [Litematica](https://github.com/lntricate1/Litematica.jl).
 
 ```@index
 ```
