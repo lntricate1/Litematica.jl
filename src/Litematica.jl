@@ -36,6 +36,12 @@ struct Litematic
   regions::Vector{Region}
 end
 
+Base.zero(::Type{BlockState}) = BlockState("minecraft:air", Pair{String, String}[])
+
+function Litematic(blocks::Array{BlockState, 3})
+  return Litematic(2586, Tag(0xa, "Metadata", Tag[]), Region[Region("region", Int32.((0,0,0)), blocks, reshape(Union{Tag, Nothing}[], 0, 0, 0))])
+end
+
 Base.isequal(x::BlockState, y::BlockState) = x.block == y.block && x.properties == y.properties
 Base.:(==)(x::BlockState, y::BlockState) = x.block == y.block && x.properties == y.properties
 Base.hash(x::BlockState, h::UInt) = hash(x.block, hash(x.properties, hash(:BlockState, h)))
