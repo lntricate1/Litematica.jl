@@ -2,22 +2,60 @@
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "142682d42fd12b0512569ce82e11d10a7d5e786f"
+project_hash = "91379e590e5818177f3571a03a500485f04b7541"
+
+[[deps.DataAPI]]
+git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
+uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
+version = "1.16.0"
+
+[[deps.Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+version = "1.11.0"
 
 [[deps.GZip]]
-deps = ["Libdl"]
-git-tree-sha1 = "8d838ee3772e00c75d6cc06bb08891379868c18d"
+deps = ["Libdl", "Zlib_jll"]
+git-tree-sha1 = "0085ccd5ec327c077ec5b91a5f937b759810ba62"
 uuid = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
-version = "0.5.2"
+version = "0.6.2"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 version = "1.11.0"
 
+[[deps.MinecraftDataStructures]]
+deps = ["PooledArrays"]
+git-tree-sha1 = "190e09eb4a587ed1e5ed0e96abb71ca1a4378aae"
+repo-rev = "main"
+repo-url = "https://github.com/lntricate1/MinecraftDataStructures.jl"
+uuid = "c8cd69f1-bc5f-4dbb-a861-15a5a68cdaf9"
+version = "1.0.0-DEV"
+
 [[deps.NBT]]
 deps = ["GZip"]
-git-tree-sha1 = "b9d12a4c68b287f3941b2f416a114882f0092376"
+git-tree-sha1 = "e43ddf4de1dcee1a2e9c1c336cc6f9c90c5bbc13"
 repo-rev = "main"
 repo-url = "https://github.com/lntricate1/NBT.jl"
 uuid = "b6fc1ac1-9d30-4df3-aa0b-dd666eb91533"
 version = "0.1.0"
+
+[[deps.PooledArrays]]
+deps = ["DataAPI", "Future"]
+git-tree-sha1 = "36d8b4b899628fb92c2749eb488d884a926614d3"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "1.4.3"
+
+[[deps.Random]]
+deps = ["SHA"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+version = "1.11.0"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+version = "0.7.0"
+
+[[deps.Zlib_jll]]
+deps = ["Libdl"]
+uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
+version = "1.2.13+1"

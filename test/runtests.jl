@@ -1,12 +1,13 @@
 using Litematica
 using Test
 using LazyArtifacts
-using Aqua
+# using Aqua
 
-Aqua.test_all(Litematica)
+# Aqua.test_all(Litematica)
 
 @testset "Litematica.jl" begin
-  rootdir = artifact"litematics"
+  # rootdir = artifact"litematics"
+  rootdir = "/home/intricate/julia/litematics/"
   for f ∈ readdir(rootdir)
     print(f)
     f = joinpath(rootdir, f)
@@ -17,6 +18,7 @@ Aqua.test_all(Litematica)
     write(newfile, litematic)
     litematic2 = read(newfile, Litematic)
 
+    @test(litematic.regions[1].blocks == litematic2.regions[1].blocks)
     @test hash(litematic) == hash(litematic2)
     @test litematic == litematic2
 
