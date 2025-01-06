@@ -66,8 +66,8 @@ function Base.read(io::IO, ::Type{Litematic})
     # Array of size `size_`, but reading blocks in XZY order
     palette = _read_palette(regiontag["BlockStatePalette"])
     compressedBlocks = CompressedPalettedContainer(palette, regiontag["BlockStates"].data)
-    blockstate_ids = PooledArray(compressedBlocks, 2, prod(size_))
-    blocks = _permutedims(reshape(blockstate_ids, size_[1], size_[3], size_[2]), (1, 3, 2))
+    blocks = PooledArray(compressedBlocks, 2, (size_[1], size_[3], size_[2]))
+    blocks.refs = permutedims(blocks.refs, (1, 3, 2))
 
     tile_entities::Array{Union{Tag, Nothing}} = fill(nothing, size_...)
     for te in regiontag["TileEntities"].data
