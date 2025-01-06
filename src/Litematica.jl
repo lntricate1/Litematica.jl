@@ -113,6 +113,16 @@ end
   p1.refs = permutedims(p1.refs, perm)
   return p1
 end
+@inline function _permutedims(p::PooledArray{BlockState, UInt64, 3, Array{UInt64, 3}}, perm)
+  p1 = copy(p)
+  p1.refs = permutedims(p1.refs, perm)
+  return p1
+end
+@inline function _permutedims(p::Base.ReshapedArray{MinecraftDataStructures.BlockState, 3, PooledArrays.PooledVector{MinecraftDataStructures.BlockState, UInt64, Vector{UInt64}}, Tuple{}}, perm)
+  p1 = copy(p)
+  p1.refs = permutedims(p1.refs, perm)
+  return p1
+end
 
 function _read_palette(root_tag::Tag)::Vector{BlockState}
   blockstatetags = root_tag.data

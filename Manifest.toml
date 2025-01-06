@@ -26,7 +26,7 @@ version = "1.11.0"
 
 [[deps.MinecraftDataStructures]]
 deps = ["PooledArrays"]
-git-tree-sha1 = "190e09eb4a587ed1e5ed0e96abb71ca1a4378aae"
+git-tree-sha1 = "836079af2385eabfddfd6562f926cae3f039626b"
 repo-rev = "main"
 repo-url = "https://github.com/lntricate1/MinecraftDataStructures.jl"
 uuid = "c8cd69f1-bc5f-4dbb-a861-15a5a68cdaf9"
