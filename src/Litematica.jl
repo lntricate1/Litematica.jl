@@ -7,7 +7,7 @@ export Region, Litematic
 struct Region
   name::String
   pos::Tuple{Int32, Int32, Int32}
-  blocks::PooledArray{BlockState, UInt32, 3, Array{UInt32, 3}}
+  blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}
   tile_entities::Array{Union{Tag, Nothing}, 3}
 end
 
@@ -15,13 +15,15 @@ Base.isequal(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blo
 Base.:(==)(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blocks == y.blocks && x.tile_entities == y.tile_entities
 Base.hash(r::Region, h::UInt) = hash(r.name, hash(r.pos, hash(r.blocks, hash(r.tile_entities, h))))
 
-@inline function Region(blocks::Array{BlockState, 3})
-  p = PooledArray(zeros(BlockState, size(blocks)))
+@inline function Region(blocks::Array{AbstractBlockState, 3})
+  p = PooledArray(zeros(Block, size(blocks)))
   p .= blocks
   return Region(p)
 end
-@inline function Region(blocks::PooledArray{BlockState, UInt32, 3, Array{UInt32, 3}})
-  blocks.pool[1] != zero(BlockState) && ArgumentError("Litematica regions must have air as the first palette element.")
+
+@inline function Region(blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}})
+  first_palette = blocks.pool[1]
+  first_palette != zero(first_palette) && ArgumentError("Litematica regions must have air as the first palette element.")
   return Region("region", Int32.((0, 0, 0)), blocks, reshape(Union{Tag, Nothing}[], 0, 0, 0))
 end
 
@@ -35,8 +37,8 @@ Base.isequal(x::Litematic, y::Litematic) = x.data_version == y.data_version && x
 Base.:(==)(x::Litematic, y::Litematic) = x.data_version == y.data_version && x.metadata == y.metadata && x.regions == y.regions
 Base.hash(l::Litematic, h::UInt) = hash(l.data_version, hash(l.metadata, hash(l.regions, h)))
 
-@inline Litematic(blocks::Array{BlockState, 3}) = Litematic(Region(blocks))
-@inline Litematic(blocks::PooledArray{BlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
+@inline Litematic(blocks::Array{AbstractBlockState, 3}) = Litematic(Region(blocks))
+@inline Litematic(blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
 @inline Litematic(region::Region) = Litematic([region])
 @inline Litematic(regions::Vector{Region}) = Litematic(2586, Tag(0xa, "Metadata", Tag[]), regions)
 
@@ -64,7 +66,7 @@ function Base.read(io::IO, ::Type{Litematic})
     size_ = Int64.(abs.(size_)) # Fix size_ sign
 
     # Array of size `size_`, but reading blocks in XZY order
-    palette = _read_palette(regiontag["BlockStatePalette"])
+    palette = _AbstractBlockState.(regiontag["BlockStatePalette"].data)
     compressedBlocks = CompressedPalettedContainer(palette, regiontag["BlockStates"].data)
     blocks = PooledArray(compressedBlocks, 2, (size_[1], size_[3], size_[2]))
     blocks.refs = permutedims(blocks.refs, (1, 3, 2))
@@ -87,7 +89,7 @@ function Base.write(io::IO, litematic::Litematic)
       Tag(0xc, "BlockStates", CompressedPalettedContainer(_permutedims(region.blocks, (1, 3, 2)), 2).data),
       Tag(0x9, "PendingBlockTicks", Tag[]),
       _writetriple(region.pos, "Position"),
-      _write_palette(region.blocks.pool), # BlockStatePalette
+      Tag(0x9, "BlockStatePalette", _Tag.(region.blocks.pool)),
       _writetriple(Int32.(size(region.blocks)), "Size"),
       Tag(0x9, "PendingFluidTicks", Tag[]),
       Tag(0x9, "TileEntities", [t for t in region.tile_entities if t !== nothing]),
@@ -103,55 +105,33 @@ function Base.write(io::IO, litematic::Litematic)
   return write(io, file)
 end
 
-@inline function _permutedims(p::PooledArray{BlockState, UInt32, 3, Array{UInt32, 3}}, perm)
-  p1 = copy(p)
-  p1.refs = permutedims(p1.refs, perm)
-  return p1
-end
-@inline function _permutedims(p::Base.ReshapedArray{MinecraftDataStructures.BlockState, 3, PooledArrays.PooledVector{MinecraftDataStructures.BlockState, UInt32, Vector{UInt32}}, Tuple{}}, perm)
-  p1 = copy(p)
-  p1.refs = permutedims(p1.refs, perm)
-  return p1
-end
-@inline function _permutedims(p::PooledArray{BlockState, UInt64, 3, Array{UInt64, 3}}, perm)
-  p1 = copy(p)
-  p1.refs = permutedims(p1.refs, perm)
-  return p1
-end
-@inline function _permutedims(p::Base.ReshapedArray{MinecraftDataStructures.BlockState, 3, PooledArrays.PooledVector{MinecraftDataStructures.BlockState, UInt64, Vector{UInt64}}, Tuple{}}, perm)
-  p1 = copy(p)
-  p1.refs = permutedims(p1.refs, perm)
-  return p1
+@inline
+function _Tag(block::Block)
+  return Tag(0xa, "", [Tag(0x8, "Name", block.id)])
 end
 
-function _read_palette(root_tag::Tag)::Vector{BlockState}
-  blockstatetags = root_tag.data
-  palette = Vector{BlockState}(undef, length(blockstatetags))
-  for (i, blockstatetag) in enumerate(blockstatetags)
-    propertiestag = blockstatetag["Properties"]
-    if propertiestag === nothing
-      palette[i] = BlockState(blockstatetag["Name"].data, Pair{String, String}[])
-    else
-      properties = [prop.name => prop.data for prop in propertiestag.data]
-      palette[i] = BlockState(blockstatetag["Name"].data, properties)
-    end
-  end
-  return palette
+@inline
+function _Tag(blockState::BlockStateVector)
+  @inbounds begin
+  return Tag(0xa, "", [Tag(0x8, "Name", blockState.id), Tag(0xa, "Properties", [Tag(0x8, p.first, p.second) for p in blockState.properties])])
+end end
+
+@inline
+function _Tag(blockState::BlockStateDict)
+  @inbounds begin
+  return Tag(0xa, "", [Tag(0x8, "Name", blockState.id), Tag(0xa, "Properties", [Tag(0x8, p.first, p.second) for p in blockState.properties])])
+end end
+
+function _AbstractBlockState(tag::Tag) :: AbstractBlockState
+  props = tag["Properties"]
+  props === nothing && return Block(tag["Name"].data)
+  return BlockStateDict(tag["Name"].data, Dict(prop.name => prop.data for prop in props.data))
 end
 
-function _write_palette(palette::Vector{BlockState})
-  blockstatetags = Array{Tag}(undef, length(palette))
-  for (i, blockstate) in enumerate(palette)
-    nametag = Tag(0x8, "Name", blockstate.id)
-
-    if length(blockstate.properties) == 0
-      @inbounds blockstatetags[i] = Tag(0xa, "", [nametag])
-    else
-      propertiestag = Tag(0xa, "Properties", [Tag(0x8, p.first, p.second) for p in blockstate.properties])
-      @inbounds blockstatetags[i] = Tag(0xa, "", [propertiestag, nametag])
-    end
-  end
-  return Tag(0x9, "BlockStatePalette", blockstatetags)
+@inline function _permutedims(p::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}, perm)
+  p1 = copy(p)
+  p1.refs = permutedims(p1.refs, perm)
+  return p1
 end
 
 @inline function _readtriple(tag::Tag{Vector{Tag}})
