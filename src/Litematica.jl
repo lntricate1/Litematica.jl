@@ -22,8 +22,7 @@ Base.hash(r::Region, h::UInt) = hash(r.name, hash(r.pos, hash(r.blocks, hash(r.t
 end
 
 @inline function Region(blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}})
-  first_palette = blocks.pool[1]
-  first_palette != zero(first_palette) && ArgumentError("Litematica regions must have air as the first palette element.")
+  is_air(blocks.pool[1]) || ArgumentError("Litematica regions must have air as the first palette element.")
   return Region("region", Int32.((0, 0, 0)), blocks, reshape(Union{Tag, Nothing}[], 0, 0, 0))
 end
 

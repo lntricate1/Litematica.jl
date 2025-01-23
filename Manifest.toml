@@ -4,6 +4,12 @@ julia_version = "1.11.1"
 manifest_format = "2.0"
 project_hash = "91379e590e5818177f3571a03a500485f04b7541"
 
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "bce6804e5e6044c6daab27bb533d1295e4a2e759"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.6"
+
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -13,12 +19,6 @@ version = "1.16.0"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 version = "1.11.0"
-
-[[deps.GZip]]
-deps = ["Libdl", "Zlib_jll"]
-git-tree-sha1 = "0085ccd5ec327c077ec5b91a5f937b759810ba62"
-uuid = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
-version = "0.6.2"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -33,12 +33,12 @@ uuid = "c8cd69f1-bc5f-4dbb-a861-15a5a68cdaf9"
 version = "1.0.0-DEV"
 
 [[deps.NBT]]
-deps = ["GZip"]
-git-tree-sha1 = "e43ddf4de1dcee1a2e9c1c336cc6f9c90c5bbc13"
+deps = ["CodecZlib"]
+git-tree-sha1 = "ddddc2035f3290d6238bd378f4366aaba2ac98f1"
 repo-rev = "main"
 repo-url = "https://github.com/lntricate1/NBT.jl"
 uuid = "b6fc1ac1-9d30-4df3-aa0b-dd666eb91533"
-version = "0.1.0"
+version = "0.1.1"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
@@ -54,6 +54,11 @@ version = "1.11.0"
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.11.3"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
