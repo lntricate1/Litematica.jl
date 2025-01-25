@@ -7,7 +7,7 @@ export Region, Litematic
 struct Region{T<:AbstractBlockState}
   name::String
   pos::Tuple{Int32, Int32, Int32}
-  blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}
+  blocks::PooledArray{T, UInt32, 3, Array{UInt32, 3}}
   tile_entities::Array{Union{Tag, Nothing}, 3}
 end
 
@@ -41,10 +41,9 @@ Base.hash(l::Litematic, h::UInt) = hash(l.data_version, hash(l.metadata, hash(l.
 @inline Litematic(region::Region) = Litematic([region])
 @inline Litematic(regions::Vector{Region}) = Litematic(2586, Tag(0xa, "Metadata", Tag[]), regions)
 
-function Base.show(io::IO, ::MIME"text/plain", lr::Region)
+function Base.show(io::IO, M::MIME"text/plain", lr::Region)
   println(io, "Region \"", lr.name, "\" at ", lr.pos, ':')
-  # show(io, "text/plain", [split(b.id, ':')[end] for b in lr.blocks])
-  show(io, MIME"text/plain", lr.blocks)
+  show(io, M, lr.blocks)
 end
 
 function Base.show(io::IO, lr::Region)
