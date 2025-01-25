@@ -4,7 +4,7 @@ using NBT, MinecraftDataStructures, PooledArrays
 
 export Region, Litematic
 
-struct Region
+struct Region{T<:AbstractBlockState}
   name::String
   pos::Tuple{Int32, Int32, Int32}
   blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}
@@ -15,13 +15,13 @@ Base.isequal(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blo
 Base.:(==)(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blocks == y.blocks && x.tile_entities == y.tile_entities
 Base.hash(r::Region, h::UInt) = hash(r.name, hash(r.pos, hash(r.blocks, hash(r.tile_entities, h))))
 
-@inline function Region(blocks::Array{AbstractBlockState, 3})
+@inline function Region(blocks::Array{<:AbstractBlockState, 3})
   p = PooledArray(zeros(Block, size(blocks)))
   p .= blocks
   return Region(p)
 end
 
-@inline function Region(blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}})
+@inline function Region(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}})
   is_air(blocks.pool[1]) || ArgumentError("Litematica regions must have air as the first palette element.")
   return Region("region", Int32.((0, 0, 0)), blocks, reshape(Union{Tag, Nothing}[], 0, 0, 0))
 end
@@ -36,13 +36,13 @@ Base.isequal(x::Litematic, y::Litematic) = x.data_version == y.data_version && x
 Base.:(==)(x::Litematic, y::Litematic) = x.data_version == y.data_version && x.metadata == y.metadata && x.regions == y.regions
 Base.hash(l::Litematic, h::UInt) = hash(l.data_version, hash(l.metadata, hash(l.regions, h)))
 
-@inline Litematic(blocks::Array{AbstractBlockState, 3}) = Litematic(Region(blocks))
-@inline Litematic(blocks::PooledArray{AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
+@inline Litematic(blocks::Array{<:AbstractBlockState, 3}) = Litematic(Region(blocks))
+@inline Litematic(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
 @inline Litematic(region::Region) = Litematic([region])
 @inline Litematic(regions::Vector{Region}) = Litematic(2586, Tag(0xa, "Metadata", Tag[]), regions)
 
 function Base.show(io::IO, ::MIME"text/plain", lr::Region)
-  println(io, "LitematicaRegion \"", lr.name, "\" at ", lr.pos, ':')
+  println(io, "Region \"", lr.name, "\" at ", lr.pos, ':')
   # show(io, "text/plain", [split(b.id, ':')[end] for b in lr.blocks])
   show(io, MIME"text/plain", lr.blocks)
 end
