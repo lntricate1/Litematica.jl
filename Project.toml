@@ -1,9 +1,18 @@
 name = "Litematica"
 uuid = "82944276-add8-4074-9c50-3a921b02611b"
-authors = ["Ellie <intricatebread@gmail.com> and contributors"]
 version = "0.1.0"
+authors = ["Ellie <intricatebread@gmail.com> and contributors"]
 
 [deps]
+BufferedStreams = "e1450e63-4bb3-523b-b2a4-4ffa8c0fd77d"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 MinecraftDataStructures = "c8cd69f1-bc5f-4dbb-a861-15a5a68cdaf9"
 NBT = "b6fc1ac1-9d30-4df3-aa0b-dd666eb91533"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 PooledArrays = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+
+[compat]
+BufferedStreams = "1.2.2"
+CodecZlib = "0.7.8"
+MinecraftDataStructures = "1.0.0"
+OrderedCollections = "1.8.1"
