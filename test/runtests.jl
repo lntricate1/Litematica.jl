@@ -18,7 +18,7 @@ using LazyArtifacts
     write(newfile, litematic)
     litematic2 = read(newfile, Litematic)
 
-    @test(litematic.regions[1].blocks == litematic2.regions[1].blocks)
+    @test all((r1, r2) -> r1.blocks == r2.blocks, zip(litematic.regions, litematic2.regions))
     @test hash(litematic) == hash(litematic2)
     @test litematic == litematic2
 
