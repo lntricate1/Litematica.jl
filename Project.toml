@@ -16,3 +16,7 @@ BufferedStreams = "1.2.2"
 CodecZlib = "0.7.8"
 MinecraftDataStructures = "1.0.0"
 OrderedCollections = "1.8.1"
+
+[sources]
+NBT = {url = "https://github.com/lntricate1/NBT.jl"}
+MinecraftDataStructures = {url = "https://github.com/lntricate1/MinecraftDataStructures.jl"}
