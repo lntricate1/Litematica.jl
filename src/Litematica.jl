@@ -7,7 +7,6 @@ using BufferedStreams, CodecZlib
 export Region, Litematic
 
 struct Region{T<:AbstractBlockState, I<:Unsigned}
-  # name::String
   position::Tuple{Int32, Int32, Int32}
   blocks::PooledArray{T, I, 3, Array{I, 3}}
   tileEntities::Array{Union{LittleDict{String}, Nothing}, 3}
@@ -25,14 +24,13 @@ end
 
 @inline function Region(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}})
   is_air(blocks.pool[1]) || ArgumentError("Litematica regions must have air as the first palette element.")
-  return Region("region", Int32.((0, 0, 0)), blocks, reshape(Union{LittleDict{String}, Nothing}[], 0, 0, 0))
+  return Region(Int32.((0, 0, 0)), blocks, reshape(Union{LittleDict{String}, Nothing}[], 0, 0, 0))
 end
 
 struct Litematic
   minecraftDataVersion::Int32
   version::Int32
   metadata::LittleDict{String}
-  # regions::Vector{Region}
   regions::LittleDict{String, Region}
 end
 
@@ -46,7 +44,6 @@ Base.hash(l::Litematic, h::UInt) = hash(l.data_version, hash(l.metadata, hash(l.
 @inline Litematic(regions::Vector{Region{A, B}}) where {A,B} = Litematic(2586, LittleDict{String}(), regions)
 
 function Base.show(io::IO, M::MIME"text/plain", lr::Region)
-  # println(io, "Region \"", lr.name, "\" at ", lr.pos, ':')
   println(io, "Region at ", lr.position, ':')
   show(io, M, lr.blocks)
 end
@@ -54,8 +51,6 @@ end
 function Base.show(io::IO, lr::Region)
   a = lr.position
   b = lr.position .+ size(lr.blocks) .- 1
-  # print(io, '"', lr.name, "\" (", a[1], ' ', a[2], ' ', a[3], " ~ ",
-  #       b[1], ' ', b[2], ' ', b[3], ')')
   print(io, "Region(", a[1], ' ', a[2], ' ', a[3], " ~ ",
         b[1], ' ', b[2], ' ', b[3], ')')
 end
@@ -146,22 +141,6 @@ function read_region(io::IO)
     tile_entities[x+1, y+1, z+1] = te
   end
   return Region(position, blocks, tile_entities)
-#     pos, size_ = _readtriple.((regiontag["Position"], regiontag["Size"]))
-#     pos = min.(pos, pos .+ size_ .- sign.(size_)) # Get negativemost corner
-#     size_ = Int64.(abs.(size_)) # Fix size_ sign
-  
-#     # Array of size `size_`, but reading blocks in XZY order
-#     palette = _AbstractBlockState.(regiontag["BlockStatePalette"])
-#     # compressedBlocks = CompressedPalettedContainer(palette, regiontag["BlockStates"])
-#     # blocks = PooledArray(compressedBlocks, 2, (size_[1], size_[3], size_[2]))
-#     blocks = bitunpack(regiontag["BlockStates"], palette, 2, (size_[1], size_[3], size_[2]))
-#     blocks.refs = permutedims(blocks.refs, (1, 3, 2))
-# 
-#     tile_entities::Array{Union{LittleDict{String}, Nothing}} = fill(nothing, size_...)
-#     for te in regiontag["TileEntities"]
-#       x, y, z = _readtriple(te)
-#       tile_entities[x+1, y+1, z+1] = te
-#     end
 end
 
 function read_coords(io::IO)
@@ -222,36 +201,6 @@ function read_blockstate(io::IO)
   return Block(id)
 end
 
-# function Base.read(io::IO, ::Type{Litematic})
-#   root_tag = NBT.read(io).second
-#   regiontags = root_tag["Regions"]
-#   regions = Vector{Region}(undef, length(regiontags))
-
-#   for (i, pair) in enumerate(regiontags)
-#     regiontag = pair.second
-#     pos, size_ = _readtriple.((regiontag["Position"], regiontag["Size"]))
-#     pos = min.(pos, pos .+ size_ .- sign.(size_)) # Get negativemost corner
-#     size_ = Int64.(abs.(size_)) # Fix size_ sign
-
-#     # Array of size `size_`, but reading blocks in XZY order
-#     palette = _AbstractBlockState.(regiontag["BlockStatePalette"])
-#     # compressedBlocks = CompressedPalettedContainer(palette, regiontag["BlockStates"])
-#     # blocks = PooledArray(compressedBlocks, 2, (size_[1], size_[3], size_[2]))
-#     blocks = bitunpack(regiontag["BlockStates"], palette, 2, (size_[1], size_[3], size_[2]))
-#     blocks.refs = permutedims(blocks.refs, (1, 3, 2))
-
-#     tile_entities::Array{Union{LittleDict{String}, Nothing}} = fill(nothing, size_...)
-#     for te in regiontag["TileEntities"]
-#       x, y, z = _readtriple(te)
-#       tile_entities[x+1, y+1, z+1] = te
-#     end
-
-#     regions[i] = Region(pair.first, pos, blocks, tile_entities)
-#   end
-
-#   return Litematic(root_tag["MinecraftDataVersion"], root_tag["Metadata"], regions)
-# end
-
 function Base.write(io::IO, litematic::Litematic)
   s, bytes = begin_nbt_file(io)
   bytes += write_tag(s, "MinecraftDataVersion" => litematic.data_version)
@@ -261,7 +210,6 @@ function Base.write(io::IO, litematic::Litematic)
 
   for region in litematic.regions
     bytes += begin_compound(s, region.name)
-    # bytes += write_tag(s, "BlockStates" => CompressedPalettedContainer(_permutedims(region.blocks, (1, 3, 2)), 2))
     bytes += write_tag(s, "BlockStates" => bitpack(_permutedims(region.blocks, (1, 3, 2)), 2))
     bytes += write_tag(s, "PendingBlockTicks" => LittleDict{String}[])
     bytes += write_tag(s, "Position" => _writetriple(region.pos))
