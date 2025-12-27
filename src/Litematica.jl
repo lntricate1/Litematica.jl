@@ -235,11 +235,6 @@ end
   return LittleDict("Name" => blockState.id, "Properties" => blockState.properties)
 end end
 
-function _AbstractBlockState(tag::LittleDict{String}) :: AbstractBlockState
-  haskey(tag, "Properties") || return Block(tag["Name"])
-  return BlockState(tag["Name"], tag["Properties"])
-end
-
 @inline function _permutedims(p::PooledArray{<:AbstractBlockState, <:Unsigned, 3, Array{UInt32, 3}}, perm::Tuple{Int64, Int64, Int64})
   p1 = copy(p)
   p1.refs = permutedims(p1.refs, perm)
