@@ -12,9 +12,9 @@ struct Region{T<:AbstractBlockState, I<:Unsigned}
   tileEntities::Array{Union{LittleDict{String}, Nothing}, 3}
 end
 
-Base.isequal(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blocks == y.blocks && x.tile_entities == y.tile_entities
-Base.:(==)(x::Region, y::Region) = x.name == y.name && x.pos == y.pos && x.blocks == y.blocks && x.tile_entities == y.tile_entities
-Base.hash(r::Region, h::UInt) = hash(r.name, hash(r.pos, hash(r.blocks, hash(r.tile_entities, h))))
+Base.isequal(x::Region, y::Region) = x.position == y.position && x.blocks == y.blocks && x.tileEntities == y.tileEntities
+Base.:(==)(x::Region, y::Region) = x.position == y.position && x.blocks == y.blocks && x.tileEntities == y.tileEntities
+Base.hash(r::Region, h::UInt) = hash(r.position, hash(r.blocks, hash(r.tileEntities, h)))
 
 @inline function Region(blocks::Array{<:AbstractBlockState, 3})
   p = PooledArray(zeros(Block, size(blocks)))
@@ -34,14 +34,14 @@ struct Litematic
   regions::LittleDict{String, Region}
 end
 
-Base.isequal(x::Litematic, y::Litematic) = x.data_version == y.data_version && x.metadata == y.metadata && x.regions == y.regions
-Base.:(==)(x::Litematic, y::Litematic) = x.data_version == y.data_version && x.metadata == y.metadata && x.regions == y.regions
-Base.hash(l::Litematic, h::UInt) = hash(l.data_version, hash(l.metadata, hash(l.regions, h)))
+Base.isequal(x::Litematic, y::Litematic) = x.minecraftDataVersion == y.minecraftDataVersion && x.version == y.version && x.metadata == y.metadata && x.regions == y.regions
+Base.:(==)(x::Litematic, y::Litematic) = x.minecraftDataVersion == y.minecraftDataVersion && x.version == y.version && x.metadata == y.metadata && x.regions == y.regions
+Base.hash(l::Litematic, h::UInt) = hash(l.minecraftDataVersion, hash(l.version, hash(l.metadata, hash(l.regions, h))))
 
 @inline Litematic(blocks::Array{<:AbstractBlockState, 3}) = Litematic(Region(blocks))
 @inline Litematic(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
 @inline Litematic(region::Region) = Litematic([region])
-@inline Litematic(regions::Vector{Region{A, B}}) where {A,B} = Litematic(2586, LittleDict{String}(), regions)
+@inline Litematic(regions::Vector{Region{A, B}}) where {A,B} = Litematic(2586, 1, LittleDict{String}(), regions)
 
 function Base.show(io::IO, M::MIME"text/plain", lr::Region)
   println(io, "Region at ", lr.position, ':')
@@ -132,9 +132,9 @@ function read_region(io::IO)
       NBT._lut_skip[contentsid](io)
     end
   end
-  size_ = abs.(size_)
-  blocks = bitunpack(blockStates, palette, 2, (size_[1], size_[3], size_[2]))
   position = min.(position, position .+ size_ .- sign.(size_)) # get negativemost corner
+  size_ = abs.(size_)
+  blocks = permutedims(bitunpack(blockStates, palette, 2, (size_[1], size_[3], size_[2])), (1,3,2))
   tile_entities::Array{Union{LittleDict{String}, Nothing}, 3} = fill(nothing, size_...)
   for te in tileEntities
     x, y, z = _readtriple(te)
@@ -202,27 +202,27 @@ function read_blockstate(io::IO)
 end
 
 function Base.write(io::IO, litematic::Litematic)
-  s, bytes = begin_nbt_file(io)
-  bytes += write_tag(s, "MinecraftDataVersion" => litematic.data_version)
-  bytes += write_tag(s, "Version" => Int32(5))
-  bytes += write_tag(s, "Metadata" => litematic.metadata)
-  bytes += begin_compound(s, "Regions")
+  s, bytes = NBT.begin_nbt_file(io)
+  bytes += NBT.write_tag(s, "MinecraftDataVersion" => litematic.minecraftDataVersion)
+  bytes += NBT.write_tag(s, "Version" => litematic.version)
+  bytes += NBT.write_tag(s, "Metadata" => litematic.metadata)
+  bytes += NBT.begin_compound(s, "Regions")
 
-  for region in litematic.regions
-    bytes += begin_compound(s, region.name)
-    bytes += write_tag(s, "BlockStates" => bitpack(_permutedims(region.blocks, (1, 3, 2)), 2))
-    bytes += write_tag(s, "PendingBlockTicks" => LittleDict{String}[])
-    bytes += write_tag(s, "Position" => _writetriple(region.pos))
-    bytes += write_tag(s, "BlockStatePalette" => _Tag.(region.blocks.pool))
-    bytes += write_tag(s, "Size" => _writetriple(Int32.(size(region.blocks))))
-    bytes += write_tag(s, "PendingFluidTicks" => LittleDict{String}[])
-    bytes += write_tag(s, "TileEntities" => LittleDict{String}[t for t in region.tile_entities if t !== nothing])
-    bytes += write_tag(s, "Entities" => LittleDict{String}[])
-    bytes += end_compound(s)
+  for (name, region) in litematic.regions
+    bytes += NBT.begin_compound(s, name)
+    bytes += NBT.write_tag(s, "BlockStates" => bitpack(_permutedims(region.blocks, (1, 3, 2)), 2))
+    bytes += NBT.write_tag(s, "PendingBlockTicks" => LittleDict{String}[])
+    bytes += NBT.write_tag(s, "Position" => _writetriple(region.position))
+    bytes += NBT.write_tag(s, "BlockStatePalette" => _Tag.(region.blocks.pool))
+    bytes += NBT.write_tag(s, "Size" => _writetriple(Int32.(size(region.blocks))))
+    bytes += NBT.write_tag(s, "PendingFluidTicks" => LittleDict{String}[])
+    bytes += NBT.write_tag(s, "TileEntities" => LittleDict{String}[t for t in region.tileEntities if t !== nothing])
+    bytes += NBT.write_tag(s, "Entities" => LittleDict{String}[])
+    bytes += NBT.end_compound(s)
   end
 
-  bytes += end_compound(s)
-  bytes += end_nbt_file(s)
+  bytes += NBT.end_compound(s)
+  bytes += NBT.end_nbt_file(s)
   return bytes
 end
 
