@@ -40,8 +40,8 @@ Base.hash(l::Litematic, h::UInt) = hash(l.minecraftDataVersion, hash(l.version, 
 
 @inline Litematic(blocks::Array{<:AbstractBlockState, 3}) = Litematic(Region(blocks))
 @inline Litematic(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
-@inline Litematic(region::Region) = Litematic([region])
-@inline Litematic(regions::Vector{Region{A, B}}) where {A,B} = Litematic(2586, 1, LittleDict{String, String}(), regions)
+@inline Litematic(region::Region) = Litematic(LittleDict("" => region))
+@inline Litematic(regions::LittleDict{String, Region{A, B}}) where {A,B} = Litematic(2586, 1, LittleDict{String, String}(), regions)
 
 function Base.show(io::IO, M::MIME"text/plain", lr::Region)
   println(io, "Region at ", lr.position, ':')
