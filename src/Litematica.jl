@@ -17,7 +17,7 @@ Base.:(==)(x::Region, y::Region) = x.position == y.position && x.blocks == y.blo
 Base.hash(r::Region, h::UInt) = hash(r.position, hash(r.blocks, hash(r.tileEntities, h)))
 
 @inline function Region(blocks::Array{<:AbstractBlockState, 3})
-  p = PooledArray(zeros(Block, size(blocks)))
+  p = PooledArray(zeros(AbstractBlockState, size(blocks)))
   p .= blocks
   return Region(p)
 end
