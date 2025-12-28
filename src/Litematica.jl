@@ -41,7 +41,32 @@ Base.hash(l::Litematic, h::UInt) = hash(l.minecraftDataVersion, hash(l.version, 
 @inline Litematic(blocks::Array{<:AbstractBlockState, 3}) = Litematic(Region(blocks))
 @inline Litematic(blocks::PooledArray{<:AbstractBlockState, UInt32, 3, Array{UInt32, 3}}) = Litematic(Region(blocks))
 @inline Litematic(region::Region) = Litematic(LittleDict("" => region))
-@inline Litematic(regions::LittleDict{String, Region{A, B}}) where {A,B} = Litematic(2586, 1, LittleDict{String, String}(), regions)
+function Litematic(regions::LittleDict{String, Region{A, B}}, author="unknown", name="unnamed") where {A,B}
+  timeCreated = round(Int, 1000time())
+  x::Int32, y::Int32, z::Int32 = first(regions).second.position
+  X::Int32, Y::Int32, Z::Int32 = x, y, z
+  totalBlocks::Int32 = 0
+  totalVolume::Int32 = 0
+  for (region_name, r) in regions
+    x, y, z = min.((x, y, z), r.position)
+    X, Y, Z = max.((X, Y, Z), r.position .+ size(r.blocks))
+    totalBlocks += sum(x -> Int32(!is_air(x)), r.blocks)
+    totalVolume += prod(size(r.blocks))
+  end
+  enclosingSize = (X, Y, Z) .- (x, y, z)
+  metadata = LittleDict(
+    "TimeCreated" => timeCreated,
+    "TimeModified" => timeCreated,
+    "EnclosingSize" => _writetriple(enclosingSize),
+    "Description" => "Created using the Litematica.jl Julia package",
+    "RegionCount" => Int32(length(regions)),
+    "TotalBlocks" => totalBlocks,
+    "Author" => author,
+    "TotalVolume" => totalVolume,
+    "Name" => name
+  )
+  Litematic(2586, 1, metadata, regions)
+end
 
 function Base.show(io::IO, M::MIME"text/plain", lr::Region)
   println(io, "Region at ", lr.position, ':')
